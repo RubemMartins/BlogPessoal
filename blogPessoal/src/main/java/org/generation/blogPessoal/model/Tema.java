@@ -25,7 +25,7 @@ public class Tema {
 	private String descricao;
 	
 	@OneToMany(mappedBy = "tema", cascade = CascadeType.ALL)
-	@JsonIgnoreProperties("tema")
+	@JsonIgnoreProperties("tema") // evita o loop-infinito de postagem procurar tema e tema procurar postagem. garantindo apenas 1 retorno
 	private List<Postagem> postagem;
 
 	public long getId() {

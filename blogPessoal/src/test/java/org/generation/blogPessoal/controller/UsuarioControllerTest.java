@@ -47,43 +47,44 @@ public class UsuarioControllerTest {
 		assertEquals(HttpStatus.CREATED, resposta.getStatusCode());
 		
 	}
+    @Test
+    @Order(2)
+    @DisplayName("Não deve permitir duplicação do Usuário")
+    public void naoDeveDuplicarUsuario() {
 
-	@Test
-	@Order(2)
-	@DisplayName("Não deve permitir duplicação do Usuário")
-	public void naoDeveDuplicarUsuario() {
+    usuarioService.cadastrarUsuario(new Usuario(0L, 
+        "Maria da Silva", "maria_silva@email.com.br", "13465278"));
 
-		usuarioService.cadastrarUsuario(new Usuario(0L, 
-			"Maria da Silva", "maria_silva@email.com.br", "13465278"));
+    HttpEntity<Usuario> requisicao = new HttpEntity<Usuario>(new Usuario(0L, 
+        "Maria da Silva", "maria_silva@email.com.br", "13465278"));
 
-		HttpEntity<Usuario> requisicao = new HttpEntity <Usuario>(new Usuario(0L, 
-			"Maria da Silva", "maria_silva@email.com.br", "13465278"));
+    ResponseEntity<Usuario> resposta = testRestTemplate
+        .exchange("/usuarios/cadastrar", HttpMethod.POST, requisicao, Usuario.class);
 
-		ResponseEntity<Usuario> resposta = testRestTemplate
-			.exchange("/usuarios/cadastrar", HttpMethod.POST, requisicao, Usuario.class);
+    assertEquals(HttpStatus.BAD_REQUEST, resposta.getStatusCode());
+}
 
-		assertEquals(HttpStatus.BAD_REQUEST, resposta.getStatusCode());
-	}
+    @Test
+    @Order(3)
+    @DisplayName("Alterar um Usuário")
+    public void deveAtualizarUmUsuario() {
 
-	@Test
-	@Order(3)
-	@DisplayName("Alterar um Usuário")
-	public void deveAtualizarUmUsuario() {
+        Optional<Usuario> usuarioCreate = usuarioService.cadastrarUsuario(new Usuario(0L, 
+            "João Silva", "joaodireita@gmail.com.br", "13465278"));
 
-		Optional<Usuario> usuarioCreate = usuarioService.cadastrarUsuario(new Usuario(0L, 
-			"Juliana Andrews", "juliana_andrews@email.com.br", "juliana123"));
+        Usuario usuarioUpdate = new Usuario(usuarioCreate.get().getId(), 
+            "João Silva Direita", "joaodireita@gmail.com.br", "13465278");
+        
+        HttpEntity<Usuario> requisicao = new HttpEntity<Usuario>(usuarioUpdate);
 
-		Usuario usuarioUpdate = new Usuario(usuarioCreate.get().getId(), 
-			"Juliana Andrews Ramos", "juliana_ramos@email.com.br", "juliana123");
-		
-		HttpEntity<Usuario> requisicao = new HttpEntity<Usuario>(usuarioUpdate);
+        ResponseEntity<Usuario> resposta = testRestTemplate
+            .withBasicAuth("joaodireita@gmail.com.br", "13465278")
+            .exchange("/usuarios/atualizar", HttpMethod.PUT, requisicao, Usuario.class);
 
-		ResponseEntity<Usuario> resposta = testRestTemplate
-			.withBasicAuth("juliana_andrews@email.com.br","juliana123")
-			.exchange("/usuarios/atualizar", HttpMethod.PUT, requisicao, Usuario.class);
-
-		assertEquals(HttpStatus.OK, resposta.getStatusCode());
-	}
+        assertEquals(HttpStatus.OK, resposta.getStatusCode());
+        assertEquals(usuarioUpdate.getNome(), resposta.getBody().getNome());
+        assertEquals(usuarioUpdate.getUsuario(), resposta.getBody().getUsuario());
+    }
 
 	@Test
 	@Order(4)
